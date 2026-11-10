@@ -79,6 +79,9 @@ All SQL migrations are stored under `supabase/migrations/`:
    - Enhanced validation to enforce `skip_first_n_launches >= 1` (preventing first-ever launch ads) and valid background durations (5s - 3600s).
    - Seeded `app_open` test configurations for Android (`ca-app-pub-3940256099942544/9257390708`) and iOS (`ca-app-pub-3940256099942544/5575463023`).
 
+9. `20261110000009_allow_delete_prompts.sql`:
+   - Updated RLS policy `prompts_delete_publisher_above` on `public.prompts` to permit Publishers and Super Admins to permanently delete prompts directly regardless of draft/published/archived status.
+
 ---
 
 ## 3. ImageKit & Dual Image Input Workflow

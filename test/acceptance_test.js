@@ -111,6 +111,19 @@ try {
 }
 assert(coverRemovalBlocked, 'Removing the last valid cover from a published prompt is blocked');
 
+// 5b. Permanent Prompt Deletion
+console.log('\n--- 5b. Testing Prompt Deletion ---');
+let viewerDeleteBlocked = false;
+try {
+  mockStore.deletePrompt(newPromptByPub.id, 'viewer');
+} catch (e) {
+  viewerDeleteBlocked = e.message.includes('Permission denied');
+}
+assert(viewerDeleteBlocked, 'Viewer role is blocked from deleting prompts');
+
+const deletePromptRes = mockStore.deletePrompt(newPromptByPub.id, 'publisher');
+assert(deletePromptRes && deletePromptRes.success === true, 'Publisher can permanently delete prompt');
+
 // 6. In-Use Tag Deletion Protection
 console.log('\n--- 6. Testing In-Use Tag Deletion Block ---');
 // tag-1 ('photorealistic') is used by existing prompts

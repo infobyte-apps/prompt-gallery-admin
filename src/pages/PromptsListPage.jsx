@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Plus, Search, Filter, ArrowUpDown, Edit, Eye, Archive, 
+  Plus, Search, Filter, ArrowUpDown, Edit, Eye, Trash2, 
   CheckCircle2, RefreshCw, Image as ImageIcon, Video as VideoIcon, 
   ExternalLink, Layers 
 } from 'lucide-react';
@@ -35,8 +35,8 @@ export function PromptsListPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Archive confirmation modal state
-  const [archiveTarget, setArchiveTarget] = useState(null);
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Debounce search input
   useEffect(() => {
@@ -102,15 +102,15 @@ export function PromptsListPage() {
     }
   };
 
-  const handleConfirmArchive = async () => {
-    if (!archiveTarget) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.prompts.archive(archiveTarget.id);
-      notify.info(`Archived "${archiveTarget.title}"`);
-      setArchiveTarget(null);
+      await api.prompts.delete(deleteTarget.id);
+      notify.success(`Deleted prompt "${deleteTarget.title}"`);
+      setDeleteTarget(null);
       fetchPrompts();
     } catch (err) {
-      notify.error(err.message || 'Archive failed');
+      notify.error(err.message || 'Delete failed');
     }
   };
 
@@ -371,15 +371,15 @@ export function PromptsListPage() {
                             </button>
                           )}
 
-                          {/* Quick Archive (Publisher & Super Admin only) */}
-                          {canPublish && p.status === 'published' && (
+                          {/* Quick Delete (Publisher & Super Admin only) */}
+                          {canPublish && (
                             <button
-                              onClick={() => setArchiveTarget(p)}
+                              onClick={() => setDeleteTarget(p)}
                               className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg inline-flex items-center gap-1 text-xs font-medium cursor-pointer"
-                              title="Archive prompt"
+                              title="Delete prompt"
                             >
-                              <Archive className="w-4 h-4" />
-                              <span>Archive</span>
+                              <Trash2 className="w-4 h-4" />
+                              <span>Delete</span>
                             </button>
                           )}
                         </div>
@@ -461,13 +461,13 @@ export function PromptsListPage() {
                       </button>
                     )}
 
-                    {canPublish && p.status === 'published' && (
+                    {canPublish && (
                       <button
-                        onClick={() => setArchiveTarget(p)}
+                        onClick={() => setDeleteTarget(p)}
                         className="px-3 py-1.5 border border-rose-200 text-rose-600 rounded-lg text-xs font-semibold hover:bg-rose-50 inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <Archive className="w-3.5 h-3.5" />
-                        <span>Archive</span>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
                       </button>
                     )}
                   </div>
@@ -487,15 +487,15 @@ export function PromptsListPage() {
         </div>
       )}
 
-      {/* Archive Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={Boolean(archiveTarget)}
-        title="Archive Prompt"
-        message={`Are you sure you want to archive "${archiveTarget?.title}"? Archiving hides the prompt from all public catalog feeds, mobile joins, and collections.`}
-        confirmText="Archive Prompt"
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Prompt"
+        message={`Are you sure you want to permanently delete "${deleteTarget?.title}"? This action cannot be undone and will permanently remove this prompt and its associated media.`}
+        confirmText="Delete Prompt"
         isDestructive={true}
-        onConfirm={handleConfirmArchive}
-        onCancel={() => setArchiveTarget(null)}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

@@ -736,6 +736,22 @@ export const mockStore = {
     return savedPrompt;
   },
 
+  deletePrompt: (id, operatorRole = 'publisher') => {
+    if (operatorRole === 'viewer') {
+      throw new Error('Permission denied: Viewers cannot delete prompts');
+    }
+    const state = loadState();
+    const index = state.prompts.findIndex((p) => p.id === id);
+    if (index === -1) throw new Error('Prompt not found');
+
+    const [deleted] = state.prompts.splice(index, 1);
+    state.prompt_media = (state.prompt_media || []).filter((m) => m.prompt_id !== id);
+    state.collection_items = (state.collection_items || []).filter((ci) => ci.prompt_id !== id);
+
+    saveState(state);
+    return { success: true, deleted };
+  },
+
   // Prompt Media
   addMedia: (promptId, mediaItem) => {
     const state = loadState();

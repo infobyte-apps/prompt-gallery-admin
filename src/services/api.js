@@ -292,6 +292,47 @@ export const api = {
       return this.save({ id, status: 'archived' }, currentUser);
     },
 
+    async delete(id) {
+      if (isLiveSupabaseConfigured) {
+        // 1. Inspect prompt_media for ImageKit file IDs to clean up
+        const { data: mediaList } = await supabase
+          .from('prompt_media')
+          .select('imagekit_file_id')
+          .eq('prompt_id', id);
+
+        const fileIds = (mediaList || [])
+          .map((m) => m.imagekit_file_id)
+          .filter(Boolean);
+
+        // 2. Clear cover_media_id first to satisfy prompts_cover_media_fkey ON DELETE RESTRICT
+        await supabase
+          .from('prompts')
+          .update({ cover_media_id: null })
+          .eq('id', id);
+
+        // 3. Delete prompt record (cascades to prompt_media, prompt_categories, prompt_tags, collection_items)
+        const { error } = await supabase
+          .from('prompts')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        // 4. Protected deletion: Clean up ImageKit asset only if not referenced elsewhere
+        for (const fileId of fileIds) {
+          try {
+            await deleteImageKitAsset(fileId);
+          } catch (cleanErr) {
+            console.warn('ImageKit cleanup notice:', cleanErr.message);
+          }
+        }
+
+        return { success: true };
+      } else {
+        return mockStore.deletePrompt(id);
+      }
+    },
+
     async publish(id, currentUser) {
       return this.save({ id, status: 'published' }, currentUser);
     },

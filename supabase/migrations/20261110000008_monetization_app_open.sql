@@ -297,3 +297,4 @@ SET ad_format = EXCLUDED.ad_format,
     show_on_foreground_return = COALESCE(public.ad_placements.show_on_foreground_return, EXCLUDED.show_on_foreground_return),
     min_background_seconds = COALESCE(public.ad_placements.min_background_seconds, EXCLUDED.min_background_seconds),
     skip_first_n_launches = COALESCE(public.ad_placements.skip_first_n_launches, EXCLUDED.skip_first_n_launches);
+

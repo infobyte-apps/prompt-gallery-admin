@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, CheckCircle2, Archive, AlertCircle, Copy, Check, 
+  ArrowLeft, Save, CheckCircle2, Trash2, AlertCircle, Copy, Check, 
   ExternalLink, Sparkles, Image as ImageIcon, Video as VideoIcon, RefreshCw, Eye 
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -25,8 +25,8 @@ export function PromptEditorPage() {
   const [dirty, setDirty] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  // Archive modal
-  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  // Delete modal
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -376,21 +376,21 @@ export function PromptEditorPage() {
     }
   };
 
-  const handleArchive = async () => {
+  const handleDelete = async () => {
     if (!canPublish) {
-      notify.error('Only Publishers and Super Admins can archive content');
+      notify.error('Only Publishers and Super Admins can delete content');
       return;
     }
 
     setSaving(true);
     try {
-      await api.prompts.archive(id);
-      setStatus('archived');
-      setShowArchiveDialog(false);
+      await api.prompts.delete(id);
       setDirty(false);
-      notify.info('Prompt has been archived and hidden from public feeds');
+      setShowDeleteDialog(false);
+      notify.success('Prompt has been permanently deleted');
+      navigate('/prompts');
     } catch (err) {
-      notify.error(err.message || 'Archive failed');
+      notify.error(err.message || 'Delete failed');
     } finally {
       setSaving(false);
     }
@@ -467,14 +467,16 @@ export function PromptEditorPage() {
             </button>
           )}
 
-          {/* Archive Action */}
-          {canPublish && !isNew && status === 'published' && (
+          {/* Delete Action */}
+          {canPublish && !isNew && (
             <button
               type="button"
-              onClick={() => setShowArchiveDialog(true)}
-              className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer"
+              onClick={() => setShowDeleteDialog(true)}
+              className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5"
+              title="Delete prompt"
             >
-              <Archive className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
             </button>
           )}
         </div>
@@ -826,15 +828,15 @@ export function PromptEditorPage() {
         </div>
       </div>
 
-      {/* Archive Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={showArchiveDialog}
-        title="Archive Prompt"
-        message="Are you sure you want to archive this prompt? It will immediately disappear from mobile feeds and collection joins."
-        confirmText="Archive Prompt"
+        isOpen={showDeleteDialog}
+        title="Delete Prompt"
+        message="Are you sure you want to permanently delete this prompt? This action cannot be undone and will permanently remove this prompt and its associated media."
+        confirmText="Delete Prompt"
         isDestructive={true}
-        onConfirm={handleArchive}
-        onCancel={() => setShowArchiveDialog(false)}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteDialog(false)}
       />
     </div>
   );
