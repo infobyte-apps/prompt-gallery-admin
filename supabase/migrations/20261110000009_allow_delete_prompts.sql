@@ -10,3 +10,4 @@ CREATE POLICY "prompts_delete_publisher_above"
     USING (
         public.is_publisher_or_above()
     );
+
