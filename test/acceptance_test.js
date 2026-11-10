@@ -400,6 +400,195 @@ import('../src/lib/imagekit.js').then(({ validateImageFile, validateImageUrl, ge
   assert(publicAfterRestore.draft_config === undefined, 'Public endpoint does not expose draft_config');
   assert(publicAfterRestore.published_by === undefined, 'Public endpoint does not expose internal user IDs');
 
+  // 13. Monetization (AdMob) Module Acceptance Checks
+  console.log('\n--- 13. Testing Monetization (AdMob) Module ---');
+
+  // Check 1: Initial monetization config
+  const initialMonetization = mockStore.getMonetizationConfig();
+  assert(initialMonetization && initialMonetization.config_version === 1, 'Initial monetization config version is v1');
+  assert(initialMonetization.global_enabled === false, 'Master ads switch is initially disabled');
+
+  const initialPubAds = mockStore.getPublicMonetizationConfig('android');
+  assert(initialPubAds && initialPubAds.ads_active === false, 'Public mobile ads_active is initially false');
+  assert(initialPubAds.placements.home_feed_banner.enabled === false, 'Initial placements are disabled');
+
+  // Check 2: Role Authorization - Editors and Publishers blocked from saving monetization
+  let editorAdSaveBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({ global_enabled: true }, 'editor');
+  } catch (e) {
+    editorAdSaveBlocked = e.message.includes('Only Super Admin');
+  }
+  assert(editorAdSaveBlocked, 'Editor is blocked from modifying monetization settings');
+
+  let publisherAdSaveBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({ global_enabled: true }, 'publisher');
+  } catch (e) {
+    publisherAdSaveBlocked = e.message.includes('Only Super Admin');
+  }
+  assert(publisherAdSaveBlocked, 'Publisher is blocked from modifying monetization settings');
+
+  // Check 3: Concurrency Conflict Protection
+  let adConcurrencyBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({ global_enabled: true, expected_version: 999 }, 'super_admin');
+  } catch (e) {
+    adConcurrencyBlocked = e.message.includes('Concurrency conflict');
+  }
+  assert(adConcurrencyBlocked, 'Monetization save with mismatched version is rejected as Concurrency Conflict');
+
+  // Check 4: App ID validation (tilde required, ca-app-pub syntax)
+  let invalidAppIdBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({
+      global_enabled: false,
+      settings: [{ platform: 'android', desired_app_id: 'invalid-app-id', enabled: false }],
+      expected_version: 1,
+    }, 'super_admin');
+  } catch (e) {
+    invalidAppIdBlocked = e.message.includes('Invalid AdMob App ID format');
+  }
+  assert(invalidAppIdBlocked, 'Invalid AdMob App ID format is rejected by validator');
+
+  // Check 5: Ad Unit ID validation (slash required)
+  let invalidUnitIdBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({
+      global_enabled: false,
+      placements: [{ placement_key: 'home_feed_banner', platform: 'android', ad_format: 'banner', ad_unit_id: 'bad/unit/id', enabled: false }],
+      expected_version: 1,
+    }, 'super_admin');
+  } catch (e) {
+    invalidUnitIdBlocked = e.message.includes('Invalid AdMob Ad Unit ID format');
+  }
+  assert(invalidUnitIdBlocked, 'Invalid Ad Unit ID format is rejected by validator');
+
+  // Check 6: Cannot enable placement without valid Ad Unit ID
+  let enableWithoutUnitBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({
+      global_enabled: false,
+      placements: [{ placement_key: 'home_feed_banner', platform: 'android', ad_format: 'banner', ad_unit_id: '', enabled: true }],
+      expected_version: 1,
+    }, 'super_admin');
+  } catch (e) {
+    enableWithoutUnitBlocked = e.message.includes('cannot be enabled without a valid Ad Unit ID');
+  }
+  assert(enableWithoutUnitBlocked, 'Enabling placement without an Ad Unit ID is rejected');
+
+  // Check 7: Super Admin successful save increments version
+  const saveMonetizationRes = mockStore.saveMonetizationConfig({
+    global_enabled: true,
+    settings: [
+      { platform: 'android', enabled: true, desired_app_id: 'ca-app-pub-3940256099942544~3347511713' },
+      { platform: 'ios', enabled: false, desired_app_id: 'ca-app-pub-3940256099942544~1458002511' },
+    ],
+    placements: [
+      {
+        placement_key: 'home_feed_banner',
+        platform: 'android',
+        ad_format: 'banner',
+        ad_unit_id: 'ca-app-pub-3940256099942544/6300978111',
+        enabled: true,
+      },
+      {
+        placement_key: 'navigation_interstitial',
+        platform: 'android',
+        ad_format: 'interstitial',
+        ad_unit_id: 'ca-app-pub-3940256099942544/1033173712',
+        enabled: true,
+        min_interval_seconds: 120,
+        max_impressions_per_session: 2,
+        min_navigation_events: 3,
+        first_session_grace_seconds: 45,
+      },
+    ],
+    expected_version: 1,
+  }, 'super_admin');
+
+  assert(saveMonetizationRes.config_version === 2, 'Saving monetization configuration increments version to v2');
+
+  // Check 8: Public Android endpoint reflects active ads and placement settings
+  const androidPublicAds = mockStore.getPublicMonetizationConfig('android');
+  assert(androidPublicAds.version === 2, 'Android public ads endpoint returns v2');
+  assert(androidPublicAds.global_enabled === true && androidPublicAds.platform_enabled === true, 'Global and platform flags are true');
+  assert(androidPublicAds.ads_active === true, 'ads_active is true on Android');
+  assert(androidPublicAds.placements.home_feed_banner.enabled === true, 'home_feed_banner is active');
+  assert(androidPublicAds.placements.navigation_interstitial.min_interval_seconds === 120, 'Interstitial interval cap is 120s');
+
+  // Check 9: Public iOS endpoint respects platform disabled flag
+  const iosPublicAds = mockStore.getPublicMonetizationConfig('ios');
+  assert(iosPublicAds.platform_enabled === false, 'iOS platform_enabled is false');
+  assert(iosPublicAds.ads_active === false, 'ads_active is false on iOS when platform is disabled');
+
+  // Check 10: Public endpoint security sanitization
+  assert(androidPublicAds.desired_app_id === undefined, 'Public endpoint does not expose build-time desired_app_id');
+  assert(androidPublicAds.updated_by === undefined, 'Public endpoint does not expose admin user IDs');
+
+  // 14. Monetization App Open Ads Acceptance Checks
+  console.log('\n--- 14. Testing Monetization App Open Ads ---');
+
+  // Check 1: Initial App Open placement exists in defaults
+  assert(initialMonetization.placements.some((p) => p.placement_key === 'app_open'), 'App Open placement exists in default placements');
+  assert(androidPublicAds.placements.app_open !== undefined, 'Android public ads includes app_open placement');
+  assert(androidPublicAds.placements.app_open.format === 'app_open', 'App Open placement format is app_open');
+  assert(androidPublicAds.placements.app_open.show_on_cold_start === true, 'Default cold start trigger is enabled');
+  assert(androidPublicAds.placements.app_open.show_on_foreground_return === true, 'Default foreground return trigger is enabled');
+  assert(androidPublicAds.placements.app_open.min_background_seconds === 60, 'Default min background duration is 60s');
+  assert(androidPublicAds.placements.app_open.cooldown_seconds === 300, 'Default cooldown is 300s');
+  assert(androidPublicAds.placements.app_open.skip_first_n_launches === 2, 'Default skip first launches is 2');
+
+  // Check 2: Validation prevents first-ever-launch ads (skip_first_n_launches < 1 rejected)
+  let skipZeroBlocked = false;
+  try {
+    mockStore.saveMonetizationConfig({
+      global_enabled: true,
+      placements: [
+        {
+          placement_key: 'app_open',
+          platform: 'android',
+          ad_format: 'app_open',
+          ad_unit_id: 'ca-app-pub-3940256099942544/9257390708',
+          enabled: false,
+          skip_first_n_launches: 0,
+        },
+      ],
+      expected_version: 2,
+    }, 'super_admin');
+  } catch (e) {
+    skipZeroBlocked = e.message.includes('skip_first_n_launches must be at least 1');
+  }
+  assert(skipZeroBlocked, 'Setting skip_first_n_launches < 1 is blocked to prevent first-ever-launch ads');
+
+  // Check 3: Super Admin can configure and enable App Open placement
+  const saveAppOpenRes = mockStore.saveMonetizationConfig({
+    global_enabled: true,
+    placements: [
+      {
+        placement_key: 'app_open',
+        platform: 'android',
+        ad_format: 'app_open',
+        ad_unit_id: 'ca-app-pub-3940256099942544/9257390708',
+        enabled: true,
+        min_interval_seconds: 240,
+        max_impressions_per_session: 2,
+        show_on_cold_start: true,
+        show_on_foreground_return: true,
+        min_background_seconds: 45,
+        skip_first_n_launches: 3,
+      },
+    ],
+    expected_version: 2,
+  }, 'super_admin');
+  assert(saveAppOpenRes.config_version === 3, 'Saving App Open settings increments config version to v3');
+
+  const pubWithAppOpen = mockStore.getPublicMonetizationConfig('android');
+  assert(pubWithAppOpen.placements.app_open.enabled === true, 'App Open placement is enabled in public response');
+  assert(pubWithAppOpen.placements.app_open.cooldown_seconds === 240, 'Updated cooldown reflected in public response');
+  assert(pubWithAppOpen.placements.app_open.min_background_seconds === 45, 'Updated min background reflected');
+  assert(pubWithAppOpen.placements.app_open.skip_first_n_launches === 3, 'Updated skip launches threshold reflected');
+
   console.log('\n====================================================');
   console.log(`TOTAL SUITE RESULTS: ${passedCount} PASSED, ${failedCount} FAILED`);
   console.log('====================================================');

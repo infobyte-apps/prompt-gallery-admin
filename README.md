@@ -66,6 +66,19 @@ All SQL migrations are stored under `supabase/migrations/`:
    - Public contract: `get_public_mobile_settings` returns clean published configuration with automatic share URL fallback to Play Store URL, stripped of all internal audit and draft data.
    - RLS: Direct update restricted to `super_admin`; staff read-only access.
 
+7. `20261110000007_monetization.sql`:
+   - `ad_settings`: `platform` (`global`, `android`, `ios`), `enabled`, `desired_app_id` (build-time AdMob target), `config_version`, `updated_at`, `updated_by`.
+   - `ad_placements`: `placement_key`, `platform`, `ad_format`, `ad_unit_id`, `enabled`, frequency caps (`min_interval_seconds`, `max_impressions_per_session`, `min_navigation_events`, `first_session_grace_seconds`), `updated_at`, `updated_by`.
+   - Validation & Security: Enforces valid AdMob format regex (`ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` for App IDs, `ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX` for Unit IDs).
+   - Stored procedures: `save_monetization_config` (atomic updates with version concurrency check) and `get_public_monetization_config` (public mobile projection returning only active placements without admin identities or build-time secrets).
+   - RLS: Super Admin write access; read-only for staff roles.
+
+8. `20261110000008_monetization_app_open.sql`:
+   - Extended `ad_placements` constraints to include `app_open` format and placement key.
+   - Added App Open configuration columns: `show_on_cold_start`, `show_on_foreground_return`, `min_background_seconds`, and `skip_first_n_launches`.
+   - Enhanced validation to enforce `skip_first_n_launches >= 1` (preventing first-ever launch ads) and valid background durations (5s - 3600s).
+   - Seeded `app_open` test configurations for Android (`ca-app-pub-3940256099942544/9257390708`) and iOS (`ca-app-pub-3940256099942544/5575463023`).
+
 ---
 
 ## 3. ImageKit & Dual Image Input Workflow
@@ -174,4 +187,5 @@ To bootstrap the first Super Admin without hardcoding credentials:
 - `A07 /collections`: Curation for Featured and Trending feeds, prompt assignment, sample selection, and ordering.
 - `A08 /team`: Super Admin-only team membership and role governance with last Super Admin protection.
 - `A09 /settings/mobile`: Mobile App Settings module with Links & Support, Home feed section ordering, App Experience with ImageKit/external promotional banner, Maintenance Mode, update notice, and interactive 360×640 mobile preview modal. Super Admin can save drafts, publish, and restore; Publisher, Editor, and Viewer have read-only access.
+- `A10 /monetization`: Dedicated Monetization management page. Master ad switch, platform controls (Android/iOS), placement configurations (`home_feed_banner`, `prompt_details_banner`, `navigation_interstitial`, `app_open`), frequency capping controls for interstitials and App Open ads (cold start, foreground return, min background duration, launch threshold gating, cooldown interval, session caps), Google AdMob test ID pre-fill buttons, build-time App ID notices, and Expo config plugin copy snippet. Super Admin can save changes; other roles view read-only.
 

@@ -798,5 +798,62 @@ export const api = {
       return mockStore.getPublicMobileSettings();
     },
   },
+
+  // Monetization Module
+  monetization: {
+    async getConfig() {
+      if (isLiveSupabaseConfigured && supabase) {
+        const [settingsRes, placementsRes] = await Promise.all([
+          supabase.from('ad_settings').select('*'),
+          supabase.from('ad_placements').select('*'),
+        ]);
+
+        if (settingsRes.error) throw settingsRes.error;
+        if (placementsRes.error) throw placementsRes.error;
+
+        const allSettings = settingsRes.data || [];
+        const globalSetting = allSettings.find((s) => s.platform === 'global') || {
+          enabled: false,
+          config_version: 1,
+          updated_at: new Date().toISOString(),
+        };
+        const platformSettings = allSettings.filter((s) => s.platform !== 'global');
+
+        return {
+          global_enabled: Boolean(globalSetting.enabled),
+          config_version: globalSetting.config_version || 1,
+          updated_at: globalSetting.updated_at,
+          settings: platformSettings,
+          placements: placementsRes.data || [],
+        };
+      }
+      return mockStore.getMonetizationConfig();
+    },
+
+    async saveConfig(payload) {
+      if (isLiveSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.rpc('save_monetization_config', {
+          p_global_enabled: Boolean(payload.global_enabled),
+          p_settings: payload.settings || [],
+          p_placements: payload.placements || [],
+          p_expected_version: payload.expected_version || 1,
+        });
+        if (error) throw error;
+        return data;
+      }
+      return mockStore.saveMonetizationConfig(payload);
+    },
+
+    async getPublicConfig(platform = 'android') {
+      if (isLiveSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.rpc('get_public_monetization_config', {
+          p_platform: platform,
+        });
+        if (error) throw error;
+        return data;
+      }
+      return mockStore.getPublicMonetizationConfig(platform);
+    },
+  },
 };
 

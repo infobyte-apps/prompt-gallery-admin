@@ -19,6 +19,7 @@ import { TagsPage } from './pages/TagsPage';
 import { CollectionsPage } from './pages/CollectionsPage';
 import { TeamPage } from './pages/TeamPage';
 import { MobileAppSettingsPage } from './pages/MobileAppSettingsPage';
+import { MonetizationPage } from './pages/MonetizationPage';
 
 export function App() {
   return (
@@ -52,6 +53,9 @@ export function App() {
               {/* Settings Module */}
               <Route path="settings" element={<Navigate to="/settings/mobile" replace />} />
               <Route path="settings/mobile" element={<MobileAppSettingsPage />} />
+
+              {/* Monetization Module */}
+              <Route path="monetization" element={<MonetizationPage />} />
 
               {/* Super Admin-Only Route */}
               <Route

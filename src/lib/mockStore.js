@@ -167,6 +167,133 @@ const INITIAL_STATE = {
     published_at: '2026-11-09T18:00:00Z',
     published_by: 'usr-super-admin-01',
   },
+  ad_settings: [
+    { platform: 'global', enabled: false, desired_app_id: null, config_version: 1, updated_at: '2026-11-10T10:00:00Z', updated_by: 'usr-super-admin-01' },
+    { platform: 'android', enabled: false, desired_app_id: 'ca-app-pub-3940256099942544~3347511713', config_version: 1, updated_at: '2026-11-10T10:00:00Z', updated_by: 'usr-super-admin-01' },
+    { platform: 'ios', enabled: false, desired_app_id: 'ca-app-pub-3940256099942544~1458002511', config_version: 1, updated_at: '2026-11-10T10:00:00Z', updated_by: 'usr-super-admin-01' },
+  ],
+  ad_placements: [
+    {
+      id: 'pl-1',
+      placement_key: 'home_feed_banner',
+      platform: 'android',
+      ad_format: 'banner',
+      ad_unit_id: 'ca-app-pub-3940256099942544/6300978111',
+      enabled: false,
+      min_interval_seconds: null,
+      max_impressions_per_session: null,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-2',
+      placement_key: 'home_feed_banner',
+      platform: 'ios',
+      ad_format: 'banner',
+      ad_unit_id: 'ca-app-pub-3940256099942544/2934735716',
+      enabled: false,
+      min_interval_seconds: null,
+      max_impressions_per_session: null,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-3',
+      placement_key: 'prompt_details_banner',
+      platform: 'android',
+      ad_format: 'banner',
+      ad_unit_id: 'ca-app-pub-3940256099942544/6300978111',
+      enabled: false,
+      min_interval_seconds: null,
+      max_impressions_per_session: null,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-4',
+      placement_key: 'prompt_details_banner',
+      platform: 'ios',
+      ad_format: 'banner',
+      ad_unit_id: 'ca-app-pub-3940256099942544/2934735716',
+      enabled: false,
+      min_interval_seconds: null,
+      max_impressions_per_session: null,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-5',
+      placement_key: 'navigation_interstitial',
+      platform: 'android',
+      ad_format: 'interstitial',
+      ad_unit_id: 'ca-app-pub-3940256099942544/1033173712',
+      enabled: false,
+      min_interval_seconds: 180,
+      max_impressions_per_session: 3,
+      min_navigation_events: 4,
+      first_session_grace_seconds: 60,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-6',
+      placement_key: 'navigation_interstitial',
+      platform: 'ios',
+      ad_format: 'interstitial',
+      ad_unit_id: 'ca-app-pub-3940256099942544/4411468910',
+      enabled: false,
+      min_interval_seconds: 180,
+      max_impressions_per_session: 3,
+      min_navigation_events: 4,
+      first_session_grace_seconds: 60,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-7',
+      placement_key: 'app_open',
+      platform: 'android',
+      ad_format: 'app_open',
+      ad_unit_id: 'ca-app-pub-3940256099942544/9257390708',
+      enabled: false,
+      min_interval_seconds: 300,
+      max_impressions_per_session: 2,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      show_on_cold_start: true,
+      show_on_foreground_return: true,
+      min_background_seconds: 60,
+      skip_first_n_launches: 2,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+    {
+      id: 'pl-8',
+      placement_key: 'app_open',
+      platform: 'ios',
+      ad_format: 'app_open',
+      ad_unit_id: 'ca-app-pub-3940256099942544/5575463023',
+      enabled: false,
+      min_interval_seconds: 300,
+      max_impressions_per_session: 2,
+      min_navigation_events: null,
+      first_session_grace_seconds: null,
+      show_on_cold_start: true,
+      show_on_foreground_return: true,
+      min_background_seconds: 60,
+      skip_first_n_launches: 2,
+      updated_at: '2026-11-10T10:00:00Z',
+      updated_by: 'usr-super-admin-01',
+    },
+  ],
   tags: [
     { id: 'tag-1', slug: 'photorealistic', name: 'Photorealistic' },
     { id: 'tag-2', slug: 'cyberpunk', name: 'Cyberpunk' },
@@ -1064,6 +1191,186 @@ export const mockStore = {
       version: state.app_settings.version,
       published_at: state.app_settings.published_at,
       config: cleanConfig,
+    };
+  },
+
+  // Monetization (AdMob)
+  getMonetizationConfig: () => {
+    const state = loadState();
+    const globalSetting = (state.ad_settings || []).find((s) => s.platform === 'global') || {
+      enabled: false,
+      config_version: 1,
+      updated_at: new Date().toISOString(),
+    };
+    const platformSettings = (state.ad_settings || []).filter((s) => s.platform !== 'global');
+    const placements = state.ad_placements || [];
+
+    return {
+      global_enabled: Boolean(globalSetting.enabled),
+      config_version: globalSetting.config_version || 1,
+      updated_at: globalSetting.updated_at,
+      settings: JSON.parse(JSON.stringify(platformSettings)),
+      placements: JSON.parse(JSON.stringify(placements)),
+    };
+  },
+
+  saveMonetizationConfig: (payload, operatorRole = 'super_admin') => {
+    if (operatorRole !== 'super_admin') {
+      throw new Error('Permission denied: Only Super Admin can modify monetization settings');
+    }
+    const state = loadState();
+    let globalSetting = (state.ad_settings || []).find((s) => s.platform === 'global');
+    if (!globalSetting) {
+      globalSetting = { platform: 'global', enabled: false, config_version: 1 };
+      state.ad_settings.push(globalSetting);
+    }
+
+    if (payload.expected_version && globalSetting.config_version !== payload.expected_version) {
+      throw new Error(`Concurrency conflict: Monetization settings have been modified (version ${globalSetting.config_version} vs expected ${payload.expected_version})`);
+    }
+
+    // 1. Validate platform settings FIRST
+    if (Array.isArray(payload.settings)) {
+      payload.settings.forEach((set) => {
+        if (set.desired_app_id && set.desired_app_id.trim()) {
+          const appId = set.desired_app_id.trim();
+          if (!/^ca-app-pub-[0-9]{16}~[0-9]{10}$/i.test(appId)) {
+            throw new Error(`Invalid AdMob App ID format (expected ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX): ${appId}`);
+          }
+        }
+      });
+    }
+
+    // 2. Validate placements FIRST
+    if (Array.isArray(payload.placements)) {
+      payload.placements.forEach((plc) => {
+        const unitId = plc.ad_unit_id ? plc.ad_unit_id.trim() : '';
+        if (unitId) {
+          if (!/^ca-app-pub-[0-9]{16}\/[0-9]{10}$/i.test(unitId)) {
+            throw new Error(`Invalid AdMob Ad Unit ID format (expected ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX): ${unitId}`);
+          }
+        }
+        if (plc.enabled && !unitId) {
+          throw new Error(`Placement ${plc.placement_key} for ${plc.platform} cannot be enabled without a valid Ad Unit ID`);
+        }
+        if (plc.placement_key === 'app_open') {
+          if (plc.skip_first_n_launches !== null && plc.skip_first_n_launches !== undefined && Number(plc.skip_first_n_launches) < 1) {
+            throw new Error('skip_first_n_launches must be at least 1 to prevent first-ever-launch ads');
+          }
+          if (plc.min_background_seconds !== null && plc.min_background_seconds !== undefined) {
+            const bg = Number(plc.min_background_seconds);
+            if (bg < 5 || bg > 3600) {
+              throw new Error('min_background_seconds must be between 5 and 3600 seconds');
+            }
+          }
+        }
+      });
+    }
+
+    // 3. Apply mutations atomically
+    const newVersion = (globalSetting.config_version || 1) + 1;
+    const nowIso = new Date().toISOString();
+
+    globalSetting.enabled = Boolean(payload.global_enabled);
+    globalSetting.config_version = newVersion;
+    globalSetting.updated_at = nowIso;
+    globalSetting.updated_by = 'usr-super-admin-01';
+
+    if (Array.isArray(payload.settings)) {
+      payload.settings.forEach((set) => {
+        let existing = state.ad_settings.find((s) => s.platform === set.platform);
+        if (!existing) {
+          existing = { platform: set.platform };
+          state.ad_settings.push(existing);
+        }
+        existing.desired_app_id = set.desired_app_id && set.desired_app_id.trim() ? set.desired_app_id.trim() : null;
+        existing.enabled = Boolean(set.enabled);
+        existing.config_version = newVersion;
+        existing.updated_at = nowIso;
+        existing.updated_by = 'usr-super-admin-01';
+      });
+    }
+
+    if (Array.isArray(payload.placements)) {
+      payload.placements.forEach((plc) => {
+        let existingPlc = state.ad_placements.find(
+          (p) => p.placement_key === plc.placement_key && p.platform === plc.platform
+        );
+        if (!existingPlc) {
+          existingPlc = { placement_key: plc.placement_key, platform: plc.platform };
+          state.ad_placements.push(existingPlc);
+        }
+        existingPlc.ad_unit_id = plc.ad_unit_id && plc.ad_unit_id.trim() ? plc.ad_unit_id.trim() : null;
+        existingPlc.ad_format = plc.ad_format;
+        existingPlc.enabled = Boolean(plc.enabled);
+        existingPlc.min_interval_seconds = plc.min_interval_seconds ?? null;
+        existingPlc.max_impressions_per_session = plc.max_impressions_per_session ?? null;
+        existingPlc.min_navigation_events = plc.min_navigation_events ?? null;
+        existingPlc.first_session_grace_seconds = plc.first_session_grace_seconds ?? null;
+        existingPlc.show_on_cold_start = plc.show_on_cold_start !== undefined ? Boolean(plc.show_on_cold_start) : true;
+        existingPlc.show_on_foreground_return = plc.show_on_foreground_return !== undefined ? Boolean(plc.show_on_foreground_return) : true;
+        existingPlc.min_background_seconds = plc.min_background_seconds ?? null;
+        existingPlc.skip_first_n_launches = plc.skip_first_n_launches ?? null;
+        existingPlc.updated_at = nowIso;
+        existingPlc.updated_by = 'usr-super-admin-01';
+      });
+    }
+
+    saveState(state);
+    return {
+      success: true,
+      config_version: newVersion,
+      updated_at: nowIso,
+    };
+  },
+
+  getPublicMonetizationConfig: (platform = 'android') => {
+    const state = loadState();
+    const targetPlatform = platform.toLowerCase() === 'ios' ? 'ios' : 'android';
+    const globalSetting = (state.ad_settings || []).find((s) => s.platform === 'global');
+    const platSetting = (state.ad_settings || []).find((s) => s.platform === targetPlatform);
+
+    const globalEnabled = Boolean(globalSetting?.enabled);
+    const platformEnabled = Boolean(platSetting?.enabled);
+    const adsActive = globalEnabled && platformEnabled;
+    const version = globalSetting?.config_version || 1;
+
+    const placementsObj = {};
+    (state.ad_placements || [])
+      .filter((p) => p.platform === targetPlatform)
+      .forEach((p) => {
+        if (p.ad_format === 'app_open') {
+          placementsObj[p.placement_key] = {
+            format: p.ad_format,
+            ad_unit_id: p.ad_unit_id || '',
+            enabled: adsActive && Boolean(p.enabled) && Boolean(p.ad_unit_id),
+            cooldown_seconds: p.min_interval_seconds ?? 300,
+            min_interval_seconds: p.min_interval_seconds ?? 300,
+            max_impressions_per_session: p.max_impressions_per_session ?? 2,
+            show_on_cold_start: p.show_on_cold_start !== false,
+            show_on_foreground_return: p.show_on_foreground_return !== false,
+            min_background_seconds: p.min_background_seconds ?? 60,
+            skip_first_n_launches: p.skip_first_n_launches ?? 2,
+          };
+        } else {
+          placementsObj[p.placement_key] = {
+            format: p.ad_format,
+            ad_unit_id: p.ad_unit_id || '',
+            enabled: adsActive && Boolean(p.enabled) && Boolean(p.ad_unit_id),
+            min_interval_seconds: p.min_interval_seconds ?? 180,
+            max_impressions_per_session: p.max_impressions_per_session ?? 3,
+            min_navigation_events: p.min_navigation_events ?? 4,
+            first_session_grace_seconds: p.first_session_grace_seconds ?? 60,
+          };
+        }
+      });
+
+    return {
+      version,
+      global_enabled: globalEnabled,
+      platform_enabled: platformEnabled,
+      ads_active: adsActive,
+      placements: placementsObj,
     };
   },
 };

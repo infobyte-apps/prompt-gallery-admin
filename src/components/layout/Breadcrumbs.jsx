@@ -11,6 +11,7 @@ const routeNames = {
   team: 'Team & Access',
   settings: 'Settings',
   mobile: 'Mobile App',
+  monetization: 'Monetization',
 };
 
 export function Breadcrumbs() {

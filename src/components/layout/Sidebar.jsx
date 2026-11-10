@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Layers, Tag, BookmarkCheck, Users, Sparkles, ChevronLeft, ChevronRight, Smartphone } from 'lucide-react';
+import { LayoutDashboard, FileText, Layers, Tag, BookmarkCheck, Users, Sparkles, ChevronLeft, ChevronRight, Smartphone, DollarSign } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar({ collapsed, onToggleCollapse, isMobile = false, onCloseMobile }) {
@@ -12,6 +12,10 @@ export function Sidebar({ collapsed, onToggleCollapse, isMobile = false, onClose
     { label: 'Categories', to: '/categories', icon: Layers },
     { label: 'Tags', to: '/tags', icon: Tag },
     { label: 'Collections', to: '/collections', icon: BookmarkCheck },
+  ];
+
+  const monetizationNavItems = [
+    { label: 'Monetization', to: '/monetization', icon: DollarSign },
   ];
 
   const settingsNavItems = [
@@ -115,6 +119,38 @@ export function Sidebar({ collapsed, onToggleCollapse, isMobile = false, onClose
                       `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         isActive
                           ? 'bg-indigo-600 text-white'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                      } ${collapsed && !isMobile ? 'justify-center px-2' : ''}`
+                    }
+                    title={collapsed && !isMobile ? item.label : undefined}
+                  >
+                    <Icon className="w-5 h-5 shrink-0" />
+                    {(!collapsed || isMobile) && <span>{item.label}</span>}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Monetization Group (Separate section) */}
+          <div>
+            {(!collapsed || isMobile) && (
+              <h4 className="px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Monetization
+              </h4>
+            )}
+            <div className="space-y-1">
+              {monetizationNavItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={handleLinkClick}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-emerald-600 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                       } ${collapsed && !isMobile ? 'justify-center px-2' : ''}`
                     }
